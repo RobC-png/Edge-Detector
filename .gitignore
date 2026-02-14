@@ -45,12 +45,6 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Virtual environments
-venv/
-ENV/
-env/
-.venv
-
 # IDE
 .vscode/
 .idea/
@@ -61,8 +55,3 @@ env/
 # OS
 .DS_Store
 Thumbs.db
-
-# Project specific
-output/
-samples/
-.env

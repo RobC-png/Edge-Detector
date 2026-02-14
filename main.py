@@ -6,11 +6,20 @@ A simple program to use various image processing functions.
 
 import os
 import sys
+import cv2
 from src.canny_edge_detector import detect_edges_canny, display_edges
 from src.sobel_edge_detector import detect_edges_sobel
 from src.color_extractor import extract_bright_colorful_colors
 from src.remove_shading import remove_shading_and_keep_colors
 from src.document_scanner import detect_document
+
+
+def validate_image(image_path):
+    """Validate that an image can be read by cv2."""
+    img = cv2.imread(image_path)
+    if img is None:
+        return False, None
+    return True, img
 
 
 def print_menu():
@@ -31,10 +40,21 @@ def get_image_path():
     """Get image path from user with validation."""
     while True:
         path = input("Enter image path: ").strip()
-        if os.path.exists(path):
-            return path
-        else:
-            print(f"Error: File '{path}' not found. Please try again.")
+        if not os.path.exists(path):
+            print(f"✗ File not found: '{path}'")
+            continue
+        
+        # Try to load the image with cv2 to verify it's a valid image
+        is_valid, img = validate_image(path)
+        if not is_valid:
+            print(f"✗ Cannot read image: '{path}'")
+            print("  - File may be corrupted")
+            print("  - Format may not be supported (try .jpg, .png, .bmp, .tiff)")
+            print("  - Check file permissions")
+            continue
+        
+        print(f"✓ Image loaded successfully ({img.shape[1]}x{img.shape[0]} pixels)")
+        return path
 
 
 def get_output_path(default_name):
@@ -60,14 +80,22 @@ def option_canny():
     high_threshold = int(high_threshold) if high_threshold else 200
     
     try:
+        # Verify image can be read before processing
+        is_valid, img = validate_image(input_path)
+        if not is_valid:
+            print(f"✗ Cannot process image: {input_path}")
+            return
+        
         detect_edges_canny(input_path, output_path, low_threshold, high_threshold)
         print(f"✓ Edge detection complete! Saved to: {output_path}")
         
         show_display = input("Display result? (y/n): ").strip().lower()
         if show_display == 'y':
             display_edges(input_path, output_path)
-    except Exception as e:
+    except AssertionError as e:
         print(f"✗ Error: {e}")
+    except Exception as e:
+        print(f"✗ Error: {type(e).__name__}: {e}")
 
 
 def option_sobel():
@@ -77,11 +105,17 @@ def option_sobel():
     output_path = get_output_path("sobel_edges.png")
     
     try:
+        # Verify image can be read before processing
+        is_valid, img = validate_image(input_path)
+        if not is_valid:
+            print(f"✗ Cannot process image: {input_path}")
+            return
+        
         detect_edges_sobel(input_path, output_path)
         print(f"✓ Sobel edge detection complete!")
         print("  Output files saved in output/ directory")
     except Exception as e:
-        print(f"✗ Error: {e}")
+        print(f"✗ Error: {type(e).__name__}: {e}")
 
 
 def option_color_extract():
@@ -92,11 +126,17 @@ def option_color_extract():
     num_colors = int(num_colors) if num_colors else 8
     
     try:
+        # Verify image can be read before processing
+        is_valid, img = validate_image(input_path)
+        if not is_valid:
+            print(f"✗ Cannot process image: {input_path}")
+            return
+        
         colors = extract_bright_colorful_colors(input_path, num_colors=num_colors)
         print(f"✓ Extracted {len(colors)} colors!")
         print(f"Colors (RGB): {colors}")
     except Exception as e:
-        print(f"✗ Error: {e}")
+        print(f"✗ Error: {type(e).__name__}: {e}")
 
 
 def option_remove_shading():
@@ -111,10 +151,16 @@ def option_remove_shading():
     brightness = int(brightness) if brightness else 150
     
     try:
+        # Verify image can be read before processing
+        is_valid, img = validate_image(input_path)
+        if not is_valid:
+            print(f"✗ Cannot process image: {input_path}")
+            return
+        
         remove_shading_and_keep_colors(input_path, output_path, num_colors, brightness)
         print(f"✓ Shading removed! Saved to: {output_path}")
     except Exception as e:
-        print(f"✗ Error: {e}")
+        print(f"✗ Error: {type(e).__name__}: {e}")
 
 
 def option_document_scan():
@@ -123,12 +169,18 @@ def option_document_scan():
     input_path = get_image_path()
     
     try:
+        # Verify image can be read before processing
+        is_valid, img = validate_image(input_path)
+        if not is_valid:
+            print(f"✗ Cannot process image: {input_path}")
+            return
+        
         print("Instructions: Click on 4 corners of the document to scan it.")
         print("Points should be selected in order: top-left, top-right, bottom-right, bottom-left")
         detect_document(input_path)
         print("✓ Document scanning complete! Saved to: output/transformed_image.png")
     except Exception as e:
-        print(f"✗ Error: {e}")
+        print(f"✗ Error: {type(e).__name__}: {e}")
 
 
 def main():

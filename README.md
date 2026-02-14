@@ -1,4 +1,4 @@
-# Edge Detector
+# Image Processing
 
 A collection of image processing tools I built while messing around with python.
 
